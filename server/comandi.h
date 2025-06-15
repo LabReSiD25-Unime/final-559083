@@ -1,7 +1,12 @@
 #ifndef COMANDI_H
 #define COMANDI_H
 #include <limits.h> // per PATH_MAX (inerente al massimo percorso di cartelle)
-#define FTP_ROOT "./ftp_root"
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
+#define FTP_ROOT "./ftp_root" //definisce la directory virtuale
 
 typedef struct {
     int client_fd;
