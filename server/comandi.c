@@ -90,4 +90,87 @@ void gestisci_comando(Sessione *sessione, const char *comando){
             }
         }
     }
+    //Se il comando passato è LIST vengono ritornate le directory ed i relativi file
+    else if(strcmp(cmd,"LIST") == 0){
+        DIR *dir = opendir(sessione->directory_corrente); //Apre la directory grazie alla funzione opendir() dalla libreria dirent.h
+        if(dir == NULL){//se non è stata trovata alcuna directory
+            fprintf(stderr, "Errore: impossibile leggere la directory corrente. Input: '%s'\n", comando);
+            char msg[] = "550 Impossibile leggere la directory. \n";
+            send(sessione->client_fd,msg,stlren(msg),0);
+            return;
+        }
+        char msg_inizio[] = "150 Inizio elenco-- \n";
+        send(sessione->client_fd,msg_inizio,stlren(msg_inizio),0);
+        struct dirent *elemento;
+        char lista[DIM_BUFFER];
+        while((elemento = readdir(dir)) != NULL){//finchè vengono lette directory
+            if(strcmp(elemento->d_name, ".") == 0 ||strcmp(elemento->d_name,"..") == 0 )//Se la directory è figlia (.) oppure padre (..) continua a leggere
+                continue;
+            snprintf(lista, DIM_BUFFER, "%s\n", elemento->d_name);
+            send(sessione->client_fd, lista, strlen(lista), 0);    
+        }
+        closedir(dir);//chiudiamo la directory
+        char msg_fine[] = "226 Fine elenco.\r\n";
+        send(sessione->client_fd, msg_fine, strlen(msg_fine), 0);
+    }
+    //Se il comando ricevuto è RETR viene scaricato un file inoltrato dal client
+    else if(strcmp(cmd,"RETR") == 0){
+        if(arg == NULL){//se non viene fornito alcun argomento si spiega l'uso del comando
+            char msg[] = "501 Uso: RETR <nome_file>\n";
+            send(sessione->client_fd, msg, strlen(msg), 0);
+        }else{
+                char percorso[PATH_MAX];//salvo il path
+                snprintf(percorso, PATH_MAX, "%s/%s", sessione->directory_corrente, arg); //inserisce il path formato dalla dir corrente e l'argomento passato
+                FILE *file = fopen(percorso,"rb");//apriamo il file in modalità 'rb'
+                if(file ==NULL){
+                    char msg[] = "550 File non trovato.\n";
+                    send(sessione->client_fd, msg, strlen(msg), 0);
+                    return;
+                }
+                char msg_inizio[] = "150 Inizio download...\n";
+                send(sessione->client_fd, msg_inizio, strlen(msg_inizio), 0);
+                char dati[DIM_BUFFER];
+                size_t file_letti;
+                while ((file_letti = fread(dati, 1, DIM_BUFFER, file)) > 0) {//con fread leggiamo i file e salviamo il contenuto in dati
+                    send(sessione->client_fd, dati, file_letti, 0);
+                }
+                fclose(file);
+                char msg_fine[] = "\n226 Download completato.\n";
+                send(sessione->client_fd, msg_fine, strlen(msg_fine), 0);
+            }
+
+    }
+    //Se il comando è STOR viene caricato un file inoltrato dal client
+    else if(strcmp(cmd,"STOR") == 0){
+        if (arg == NULL) {//se non vi è alcun file viene specificato il caso d'uso
+            char msg[] = "501 Uso: STOR <nome_file>\n";
+            send(sessione->client_fd, msg, strlen(msg), 0);
+        } else {
+                char percorso[PATH_MAX];//si identifica il percorso
+                snprintf(percorso, PATH_MAX, "%s/%s", sessione->directory_corrente, arg);//inserisce il path formato dalla dir e arg
+                FILE *file = fopen(percorso,"wb");//apriamo il file in modalità wb
+                if(file == NULL){
+                        char msg[] = "550 Impossibile creare il file.\n";
+                        send(sessione->client_fd, msg, strlen(msg), 0);
+                        return;
+                }
+                char msg_inizio[] = "150 Inizio caricamento, invia dati e termina con <EOF> su una linea.\n";
+                send(sessione->client_fd, msg_inizio, strlen(msg_inizio), 0);
+                char buffer_dati[DIM_BUFFER];//buffer per ricevere i dati dal client
+                int lunghezza;
+                while ((lunghezza = recv(sessione->client_fd, buffer_dati, DIM_BUFFER - 1, 0)) > 0) { //finchè ci sono dati da leggere
+                buffer_dati[lunghezza] = '\0';
+                if (strncmp(buffer_dati, "<EOF>", 5) == 0) //se il client ha inviato <EOF> interrompiamo il programma
+                    break;
+                fwrite(buffer_dati, 1, lunghezza, file);//in seguito scriviamo i dati ricevuti
+            }
+            fclose(file);
+            char msg_fine[] = "226 caricamento completato.\n";
+            send(sessione->client_fd, msg_fine, strlen(msg_fine), 0);
+
+        }
+    }else{
+            char msg[] = "502 Comando non implementato.\n";
+            send(sessione->client_fd, msg, strlen(msg), 0);
+    }
 }
