@@ -6,7 +6,7 @@
 
 #define PORT 2121 //Porta di ascolto server FTP
 
-int inizializzazione_server();//funzione principale server
+int inizializzazione_server();//funzione principale server creazione socket ecc
 
 void attesa_connessioni(int server_fd);
 
