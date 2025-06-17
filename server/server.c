@@ -6,7 +6,7 @@
 int main(){
 
     int server_fd = inizializzazione_server();
-    pritnf("server FTP in ascolto sulla porta : %d\n", PORT);
+    printf("server FTP in ascolto sulla porta : %d\n", PORT);
 
     attesa_connessioni(server_fd);
 

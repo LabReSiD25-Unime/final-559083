@@ -12,4 +12,4 @@ void attesa_connessioni(int server_fd);
 
 void *gestione_client(void *arg); //funzione eseguita da un thread per gestire la comunicazione con un client
 
-#endif SERVER_H
+#endif
