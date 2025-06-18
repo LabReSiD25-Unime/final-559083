@@ -28,7 +28,7 @@ int inizializzazione_server(){
     indirizzo.sin_port = htons(PORT);
 
     //Funzine per associare indirizzo e porta alla socket
-    if(bind(server_fd,(struct sockaddr *)&indirizzo,sizeof(indirizzo) < 0)){
+    if(bind(server_fd,(struct sockaddr *)&indirizzo,sizeof(indirizzo)) < 0){
         perror("Errore bind");
         close(server_fd);
         return -1;

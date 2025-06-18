@@ -16,4 +16,4 @@ typedef struct {
 
 void gestisci_comando(Sessione *sessione, const char *comando);
 
-#endif COMANDI_H
+#endif

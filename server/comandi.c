@@ -1,5 +1,5 @@
 #include "comandi.h"
-
+#include <string.h>
 // Inclusioni delle librerie standard e di sistema necessarie per le operazioni
 #include <stdio.h>      
 #include <stdlib.h>     
@@ -8,7 +8,10 @@
 #include <ctype.h>     
 #include <dirent.h>     // Funzioni per la lettura delle directory (opendir, readdir, closedir)
 #include <sys/stat.h>   // Funzioni per ottenere informazioni sui file (stat) e controllare se è una directory
-#include <fcntl.h>      
+#include <fcntl.h>   
+#include <sys/types.h>
+#include <sys/socket.h>
+
 
 #define DIM_BUFFER 1024
 
@@ -29,7 +32,7 @@ void gestisci_comando(Sessione *sessione, const char *comando){
     if(!cmd){
         fprintf(stderr, "Errore: nessun comando ricevuto, Input: '%s'\n", comando);
         char msg[] = "500 Comando non riconosciuto.\n";
-        send(sessione->client_fd, msg,strln(msg),0);
+        send(sessione->client_fd, msg,strlen(msg),0);
         return;
     }
     //Se il comando ricevuto è QUIT allora il client si disconnette
@@ -96,11 +99,11 @@ void gestisci_comando(Sessione *sessione, const char *comando){
         if(dir == NULL){//se non è stata trovata alcuna directory
             fprintf(stderr, "Errore: impossibile leggere la directory corrente. Input: '%s'\n", comando);
             char msg[] = "550 Impossibile leggere la directory. \n";
-            send(sessione->client_fd,msg,stlren(msg),0);
+            send(sessione->client_fd,msg,strlen(msg),0);
             return;
         }
         char msg_inizio[] = "150 Inizio elenco-- \n";
-        send(sessione->client_fd,msg_inizio,stlren(msg_inizio),0);
+        send(sessione->client_fd,msg_inizio,strlen(msg_inizio),0);
         struct dirent *elemento;
         char lista[DIM_BUFFER];
         while((elemento = readdir(dir)) != NULL){//finchè vengono lette directory
