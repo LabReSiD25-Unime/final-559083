@@ -15,9 +15,8 @@ CLIENT_OBJS = $(CLIENT_SRCS:.c=.o)
 SERVER_OBJS = $(SERVER_SRCS:.c=.o)
 
 # Eseguibili
-CLIENT_EXEC = client.out
-SERVER_EXEC = server.out
-
+CLIENT_EXEC = $(CLIENT_DIR)/client.out
+SERVER_EXEC = $(SERVER_DIR)/server.out
 # Regola principale
 all: $(CLIENT_EXEC) $(SERVER_EXEC)
 

@@ -59,13 +59,15 @@ void interazione_utente(int client_socket){
                 break;
             }
 
-            if(strncmp(buffer,"QUIT",4) == 0){
-                printf("Disconnessione\n");
-                break;
-            }
-
             // Leggo risposta server
             ricevi_risposta(client_socket);
+
+            if(strncmp(buffer,"QUIT",4) == 0){
+                char msg[100];
+                snprintf(msg, sizeof(msg), "Disconnessione client:%d", client_socket);
+                send(client_socket, msg, strlen(msg), 0);
+                break;
+            }
 
             // Se il comando era STOR <file>, passo in modalità upload dati
             if(strncmp(buffer, "STOR ", 5) == 0) {
@@ -128,8 +130,7 @@ void ricevi_risposta(int client_socket) {
 
             // Verifica se inizia una linea con codice di risposta di fine (es: 226, 250, 221, 550)
             // Controlla solo le prime 4 caratteri: 3 numeri + spazio o trattino
-            if (n >= 4 && 
-                ((buffer[0] == '2' || buffer[0] == '5' || buffer[0] == '4' || buffer[0] == '1') &&
+            if (n >= 4 && ((buffer[0] == '2' || buffer[0] == '5' || buffer[0] == '4' || buffer[0] == '1') &&
                  isdigit(buffer[1]) && isdigit(buffer[2]) &&
                  (buffer[3] == ' ' || buffer[3] == '\r' || buffer[3] == '\n'))) {
                 // Se codice è uno di quelli finali:

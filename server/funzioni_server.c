@@ -40,8 +40,7 @@ int inizializzazione_server(){
         close(server_fd);
         return -1;
     }
-
-    printf("server in ascolto sulla porta : %d\n",PORT);
+    
     return server_fd;
 }
 
@@ -115,10 +114,6 @@ void *gestione_client(void *arg){
        
         //Richiama la funzione per la gestione dei comandi
         gestisci_comando(sessione,buffer);
-
-        if(strncmp(buffer,"QUIT",4) == 0){
-            break;
-        }
     }
     close(sessione->client_fd);
     free(sessione);
