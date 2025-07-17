@@ -45,6 +45,9 @@ int  connessione_server(){
 void interazione_utente(int client_socket){
     char buffer[DIM_BUFFER];
     int in_upload = 0; // flag per modalità upload
+    int c;
+    //Svuota stdin da eventuali \n dopo scanf
+    while ((c = getchar()) != '\n' && c != EOF);
 
     while(1){
         if (!in_upload) {
@@ -52,7 +55,12 @@ void interazione_utente(int client_socket){
             fflush(stdout);
 
             if(!fgets(buffer,DIM_BUFFER,stdin)) break;
+
             buffer[strcspn(buffer,"\n")] = '\0';
+
+               /*Salta stringhe vuote */
+            if (strlen(buffer) == 0)
+                continue;
 
             if(send(client_socket, buffer, strlen(buffer), 0) <= 0){
                 printf("Errore durante l'invio del comando\n");

@@ -44,6 +44,41 @@ int inizializzazione_server(){
     return server_fd;
 }
 
+int autentica_utente(int client_fd) {
+    char username[64] = {0};
+    char password[64] = {0};
+
+    recv(client_fd, username, sizeof(username), 0);
+    username[strcspn(username, "\r\n")] = '\0';
+
+    recv(client_fd, password, sizeof(password), 0);
+    password[strcspn(password, "\r\n")] = '\0';
+
+    FILE *fp = fopen("Autentica.txt", "r");
+    if (!fp) {
+        perror("Errore apertura file utenti");
+        return 0;
+    }
+
+    char riga[128];
+    while (fgets(riga, sizeof(riga), fp)) {
+        char file_user[64], file_pass[64];
+        if (sscanf(riga, "%[^:]:%s", file_user, file_pass) == 2) {
+            if (strcmp(file_user, username) == 0 && strcmp(file_pass, password) == 0) {
+                fclose(fp);
+                send(client_fd, "230 Login riuscito.\n", 21, 0);
+                return 1;
+            }
+        }
+    }
+
+    fclose(fp);
+    send(client_fd, "530 Login fallito.\n", 19, 0);
+    return 0;
+}
+
+
+
 //Funzione che prende in input la socket e permette a piu client di connettersi
 void attesa_connessioni(int server_fd){
     //loop infinito
@@ -95,6 +130,16 @@ void *gestione_client(void *arg){
 
     char *benvenuto = "220 Benvenuto nel server FTP\n";
     send(sessione->client_fd,benvenuto,strlen(benvenuto),0);
+
+    if (!autentica_utente(sessione->client_fd)) {
+        printf("Autenticazione fallita. Connessione chiusa.\n");
+        close(sessione->client_fd);
+        free(sessione);
+        pthread_exit(NULL);
+    } else {
+        printf("Utente autenticato correttamente.\n");
+    }
+
 
     //loop infinito per gestire i comandi del client finchè non si disconnette
     while(1){
