@@ -62,7 +62,12 @@ void gestisci_comando(Sessione *sessione, const char *comando){
                 if(strcmp(sessione->directory_corrente, "") == 0) //se la directory è vuota viene impostata a FTP_ROOT
                     strncpy(sessione->directory_corrente, FTP_ROOT,PATH_MAX);
                 char msg[DIM_BUFFER];
-                snprintf(msg,DIM_BUFFER,"250 Directory cambiata a %s\n", sessione->directory_corrente);
+                int len = snprintf(msg, DIM_BUFFER, "250 Directory cambiata a %s\n", sessione->directory_corrente);
+                if (len < 0) {
+                    perror("snprintf error");
+                }else if (len >= DIM_BUFFER) {
+                    fprintf(stderr, "Warning: messaggio troncato in msg (DIM_BUFFER=%d)\n", DIM_BUFFER);
+                }
                 send(sessione->client_fd,msg,strlen(msg),0);
             }
 
@@ -76,13 +81,23 @@ void gestisci_comando(Sessione *sessione, const char *comando){
                 snprintf(pulisci_argomento,PATH_MAX,"%s",arg);
             }
             char nuovoPercorso[PATH_MAX];
-            snprintf(nuovoPercorso,PATH_MAX,"%s/%s",sessione->directory_corrente,pulisci_argomento);
+            int len = snprintf(nuovoPercorso, PATH_MAX, "%s/%s", sessione->directory_corrente, pulisci_argomento);
+            if (len < 0) {
+                perror("snprintf error");
+            } else if (len >= PATH_MAX) {
+                fprintf(stderr, "Warning: path troncato in nuovoPercorso (PATH_MAX=%d)\n", PATH_MAX);
+            }
             //se stat restituisce 0 allora il percorso esiste, la MACRO S_ISDIR controlla se il percorso è una directory
             struct stat info;
             if(stat(nuovoPercorso,&info) == 0 && S_ISDIR(info.st_mode)){
                 strncpy(sessione->directory_corrente,nuovoPercorso,PATH_MAX);
                 char msg[DIM_BUFFER];
-                snprintf(msg,DIM_BUFFER,"250 Directory cambiata a : %s\n",sessione->directory_corrente);
+                int len = snprintf(msg, DIM_BUFFER, "250 Directory cambiata a : %s\n", sessione->directory_corrente);
+                if (len < 0) {
+                    perror("snprintf error");
+                } else if (len >= DIM_BUFFER) {
+                    fprintf(stderr, "Warning: messaggio troncato in msg (DIM_BUFFER=%d)\n", DIM_BUFFER);
+                }
                 send(sessione->client_fd,msg,strlen(msg),0);
             }
             //altrimenti se il percorso non esiste
@@ -123,7 +138,12 @@ void gestisci_comando(Sessione *sessione, const char *comando){
             send(sessione->client_fd, msg, strlen(msg), 0);
         }else{
                 char percorso[PATH_MAX];//salvo il path
-                snprintf(percorso, PATH_MAX, "%s/%s", sessione->directory_corrente, arg); //inserisce il path formato dalla dir corrente e l'argomento passato
+                int len = snprintf(percorso, PATH_MAX, "%s/%s", sessione->directory_corrente, arg); //inserisce il path formato dalla dir corrente e l'argomento passato
+                if (len < 0) {
+                    perror("snprintf error");
+                }else if(len >= PATH_MAX){
+                    fprintf(stderr, "Warning: path troncato in percorso (PATH_MAX=%d)\n", PATH_MAX);
+                }
                 FILE *file = fopen(percorso,"rb");//apriamo il file in modalità 'rb'
                 if(file ==NULL){
                     char msg[] = "550 File non trovato.\n";
@@ -150,7 +170,12 @@ void gestisci_comando(Sessione *sessione, const char *comando){
             send(sessione->client_fd, msg, strlen(msg), 0);
         } else {
                 char percorso[PATH_MAX];//si identifica il percorso
-                snprintf(percorso, PATH_MAX, "%s/%s", sessione->directory_corrente, arg);//inserisce il path formato dalla dir e arg
+                int len = snprintf(percorso, PATH_MAX, "%s/%s", sessione->directory_corrente, arg);//inserisce il path formato dalla dir e arg
+                if(len < 0){
+                    perror("snprintf error");
+                }else if(len >= PATH_MAX){
+                    fprintf(stderr, "Warning: path troncato in percorso (PATH_MAX=%d)\n", PATH_MAX);
+                }
                 FILE *file = fopen(percorso,"wb");//apriamo il file in modalità wb
                 if(file == NULL){
                         char msg[] = "550 Impossibile creare il file.\n";
