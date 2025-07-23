@@ -54,7 +54,8 @@ void interazione_utente(int client_socket){
             printf("Comandi disponibili: CWD,LIST,RETR,STOR,QUIT\n Inserisci comando: ");
             fflush(stdout);
 
-            if(!fgets(buffer,DIM_BUFFER,stdin)) break;
+            if(!fgets(buffer,DIM_BUFFER,stdin)) 
+            break;
 
             buffer[strcspn(buffer,"\n")] = '\0';
 
