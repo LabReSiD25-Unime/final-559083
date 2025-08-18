@@ -14,7 +14,7 @@
 
 int inizializzazione_server(){
     int server_fd;
-    struct sockaddr_in indirizzo;//struttura che contiene info di rete (ipv4,porta...)
+    struct sockaddr_in indirizzo; //struttura che contiene info di rete (ipv4,porta...)
 
     //Funzione socket per la creazione del socket TCP
     if((server_fd = socket(AF_INET,SOCK_STREAM,0)) == -1){
@@ -27,14 +27,14 @@ int inizializzazione_server(){
     indirizzo.sin_addr.s_addr = INADDR_ANY;//accetta connessioni da qualsiasi IP
     indirizzo.sin_port = htons(PORT);
 
-    //Funzine per associare indirizzo e porta alla socket
+    //Funzione per associare indirizzo e porta alla socket
     if(bind(server_fd,(struct sockaddr *)&indirizzo,sizeof(indirizzo)) < 0){
         perror("Errore bind");
         close(server_fd);
         return -1;
     }
 
-    //Funzione per mettere in ascolto la nostra socket su piu connessioni
+    //Funzione per mettere in ascolto la nostra socket su più connessioni
     if(listen(server_fd,MAX_CONNESSIONI) < 0){
         perror("Errore listen");
         close(server_fd);
@@ -44,22 +44,23 @@ int inizializzazione_server(){
     return server_fd;
 }
 
+//Funzione per garantire l'accesso da parte di un utente
 int autentica_utente(int client_fd) {
     char username[64] = {0};
     char password[64] = {0};
-
+//Ricezione di username e password dal client
     recv(client_fd, username, sizeof(username), 0);
     username[strcspn(username, "\r\n")] = '\0';
 
     recv(client_fd, password, sizeof(password), 0);
     password[strcspn(password, "\r\n")] = '\0';
-
+//Apertura file in lettura contenente le coppie username:password
     FILE *fp = fopen("Autentica.txt", "r");
     if (!fp) {
         perror("Errore apertura file utenti");
         return 0;
     }
-
+//lettura del file riga per riga e confronto di username e password con strcmp
     char riga[128];
     while (fgets(riga, sizeof(riga), fp)) {
         char file_user[64], file_pass[64];
@@ -71,7 +72,7 @@ int autentica_utente(int client_fd) {
             }
         }
     }
-
+//Se username e password non corrispondono login fallito
     fclose(fp);
     send(client_fd, "530 Login fallito.\n", 19, 0);
     return 0;
@@ -79,7 +80,7 @@ int autentica_utente(int client_fd) {
 
 
 
-//Funzione che prende in input la socket e permette a piu client di connettersi
+//Funzione che prende in input la socket e permette a più client di connettersi
 void attesa_connessioni(int server_fd){
     //loop infinito
     while(1){
@@ -104,7 +105,7 @@ void attesa_connessioni(int server_fd){
         }
         //impostazione campi sessione...
         sessione->client_fd = client_fd;
-        strncpy(sessione->directory_corrente,FTP_ROOT,PATH_MAX);//Impostiamo la directory corrente a ftp_root
+        strncpy(sessione->directory_corrente,FTP_ROOT,PATH_MAX); //Impostiamo la directory corrente a ftp_root
 
         //Creazione di un nuovo thread per gestire il client
         pthread_t thread_id;
@@ -125,14 +126,15 @@ void attesa_connessioni(int server_fd){
 void *gestione_client(void *arg){
     //Cast dell'argomento in tipo Sessione
     Sessione *sessione = (Sessione *)arg;
-    char buffer[DIM_BUFFER];//buffer che conterrà i comandi
+    //buffer che conterrà i comandi
+    char buffer[DIM_BUFFER];
     ssize_t n;//numero di byte ricevuti
 
-    char *benvenuto = "220 Benvenuto nel server FTP\n";
+    char *benvenuto = "220 Benvenuto nel nostro server FTP\n";
     send(sessione->client_fd,benvenuto,strlen(benvenuto),0);
-
+    //se l'autenticazione fallisce la sessione termina
     if (!autentica_utente(sessione->client_fd)) {
-        printf("Autenticazione fallita. Connessione chiusa.\n");
+        printf("Autenticazione fallita. Chiusura della connessione.\n");
         close(sessione->client_fd);
         free(sessione);
         pthread_exit(NULL);

@@ -10,8 +10,5 @@ int main(){
 
     attesa_connessioni(server_fd);
 
-    close(server_fd);
-    printf("chiusura del server");
-
     return 0;
 }

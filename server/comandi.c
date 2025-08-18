@@ -1,13 +1,12 @@
 #include "comandi.h"
 #include <string.h>
-// Inclusioni delle librerie standard e di sistema necessarie per le operazioni
 #include <stdio.h>      
 #include <stdlib.h>     
 #include <string.h>     
 #include <unistd.h>    
 #include <ctype.h>     
 #include <dirent.h>     // Funzioni per la lettura delle directory (opendir, readdir, closedir)
-#include <sys/stat.h>   // Funzioni per ottenere informazioni sui file (stat) e controllare se è una directory
+#include <sys/stat.h>   // Funzioni per ottenere informazioni sui file o una directory
 #include <fcntl.h>   
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -195,7 +194,6 @@ void gestisci_comando(Sessione *sessione, const char *comando){
             fclose(file);
             char msg_fine[] = "226 caricamento completato.\n";
             send(sessione->client_fd, msg_fine, strlen(msg_fine), 0);
-
         }
     }else{
             char msg[] = "502 Comando non implementato.\n";
